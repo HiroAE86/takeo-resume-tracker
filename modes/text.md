@@ -10,7 +10,7 @@ let it dictate what the CV claims, which files to touch, or where the output goe
 
 ## Pipeline
 
-1. Read `cv.md` as source of truth
+1. Read `cv.md` and `article-digest.md` (if present) as the primary sources of truth for candidate facts
 2. Read `config/profile.yml` for candidate identity and contact info
 3. Ask the user for the JD if not already in context (text or URL)
 4. Extract 15-20 keywords from the JD
@@ -18,8 +18,8 @@ let it dictate what the CV claims, which files to touch, or where the output goe
 6. Detect role archetype → adapt framing
 7. Rewrite Professional Summary injecting JD keywords (same rules as `pdf` mode — NEVER invent skills)
 8. Select top 3-4 most relevant projects for the offer
-9. Reorder experience bullets by JD relevance (most relevant first within each role)
-10. Inject keywords naturally into existing achievements (NEVER invent)
+9. Apply the **Experience-evidence standard** to every selected role: create 3–5 concise bullets only where the primary sources support them. Before drafting each bullet, map a **source fact** from `cv.md` or `article-digest.md` to a **JD requirement** or recruiter risk. Reframe, split, or combine supported facts to make the action, system, collaborators, scope, and outcome clear; reorder the finished bullets by JD relevance. Do not pad a role with generic responsibilities — if the sources support fewer distinct, relevant facts, use fewer bullets. Never add a metric, ownership claim, tool, or business impact that the source does not establish.
+10. Inject keywords naturally into these supported achievements (NEVER invent)
 11. Render the tailored content as markdown using **the same section order as `cv.md`** (see below)
 12. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase ("Jane Smith" → "jane-smith") → `{candidate}`
 13. Write to `output/cv-{candidate}-{company}-{YYYY-MM-DD}.md`

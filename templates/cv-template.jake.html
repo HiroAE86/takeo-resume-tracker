@@ -77,9 +77,9 @@ version: 1.0.0
     object-fit: cover;
     margin: 0 0 6px 12px;
   }
-  .cv-photo.rounded { border-radius: 3px; }
-  .cv-photo.circle  { border-radius: 50%; }
-  .cv-photo.square  { border-radius: 0; }
+  .cv-photo--rounded { border-radius: 3px; }
+  .cv-photo--circle  { border-radius: 50%; }
+  .cv-photo--square  { border-radius: 0; }
 
   /* === HEADER === */
   .header {
@@ -114,16 +114,13 @@ version: 1.0.0
   .section-title {
     font-size: 13px;
     font-weight: 400;
-    font-variant: small-caps;
-    text-transform: lowercase;
-    letter-spacing: 0.04em;
+    font-variant: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
     border-bottom: 0.8px solid #000000;
     padding-bottom: 1px;
     margin-bottom: 4px;
   }
-  /* small-caps needs lowercase source text to render as small caps; the first
-     letter is restored to a full cap so headings read "Work Experience". */
-  .section-title::first-letter { text-transform: uppercase; }
 
   .summary-text { margin-top: 2px; }
 
@@ -370,6 +367,12 @@ version: 1.0.0
   <div class="section">
     <div class="section-title">{{SECTION_AWARDS}}</div>
     <div class="award-table">{{AWARDS}}</div>
+  </div>
+
+  <!-- INTERESTS -->
+  <div class="section">
+    <div class="section-title">{{SECTION_INTERESTS}}</div>
+    <div class="interests-line">{{INTERESTS}}</div>
   </div>
 
   <!-- SKILLS -->

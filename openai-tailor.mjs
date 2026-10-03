@@ -5,7 +5,7 @@
  * Tailor your CV (HTML) with ANY OpenAI-compatible chat endpoint instead of Claude.
  * This is the headless companion to openai-eval.mjs. It takes an evaluation report
  * and the job description, applies anti-fabrication rules, and outputs a filled
- * cv-template.html ready to be turned into a PDF.
+ * the canonical Jake HTML template ready to be turned into a PDF.
  *
  * Usage:
  *   node openai-tailor.mjs --jd ./jds/my-job.txt --report reports/001-company-2026.md
@@ -38,8 +38,9 @@ const PATHS = {
   writing:  join(ROOT, 'modes', '_writing.md'),
   pdfMode:  join(ROOT, 'modes', 'pdf.md'),
   cv:       join(DATA_ROOT, 'cv.md'),
+  articleDigest: join(DATA_ROOT, 'article-digest.md'),
   profile:  join(DATA_ROOT, 'config', 'profile.yml'),
-  template: join(ROOT, 'templates', 'cv-template.html'),
+  template: join(ROOT, 'templates', 'cv-template.jake.html'),
   output:   join(DATA_ROOT, 'output'),
 };
 
@@ -191,8 +192,9 @@ const sharedContext  = readFile(PATHS.shared, 'modes/_shared.md', false);
 const writingContext = readFile(PATHS.writing, 'modes/_writing.md', false);
 const pdfModeLogic   = readFile(PATHS.pdfMode, 'modes/pdf.md', false);
 const cvContent      = readFile(PATHS.cv, 'cv.md', true);
+const articleDigestContent = readFile(PATHS.articleDigest, 'article-digest.md', false);
 const profileContent = readFile(PATHS.profile, 'config/profile.yml', true);
-const templateHtml   = readFile(PATHS.template, 'templates/cv-template.html', true);
+const templateHtml   = readFile(PATHS.template, 'templates/cv-template.jake.html', true);
 
 // ---------------------------------------------------------------------------
 // Build system prompt
@@ -217,7 +219,7 @@ PDF TAILORING MODE (pdf.md)
 ${pdfModeLogic}
 
 ═══════════════════════════════════════════════════════
-HTML TEMPLATE (cv-template.html)
+HTML TEMPLATE (canonical Jake resume template)
 ═══════════════════════════════════════════════════════
 ${templateHtml}
 
@@ -226,6 +228,9 @@ CANDIDATE BASE CV & PROFILE
 ═══════════════════════════════════════════════════════
 [cv.md]
 ${cvContent}
+
+[article-digest.md]
+${articleDigestContent}
 
 [config/profile.yml]
 ${profileContent}
@@ -238,7 +243,16 @@ IMPORTANT OPERATING RULES FOR THIS SESSION
 3. Apply the 6-second clarity gate: strongest matching evidence first.
 4. Replace all {{PLACEHOLDERS}} in the HTML Template exactly as instructed.
 5. Your final output MUST be the complete, raw, tailored HTML document.
-6. Do NOT include markdown formatting like \`\`\`html or conversational filler. Output the raw HTML starting with <!DOCTYPE html> and ending with </html>.`;
+6. Do NOT include markdown formatting like \`\`\`html or conversational filler. Output the raw HTML starting with <!DOCTYPE html> and ending with </html>.
+
+Experience-evidence standard
+For every selected role, create 3–5 concise bullets only when supported by the
+candidate's primary source facts. Map each bullet internally from a source fact
+to a JD requirement or recruiter risk before writing it. Reframe, split, or
+combine source facts to make scope, action, system, collaborators, and outcome
+clear; never add a metric, ownership claim, tool, or business impact not present
+in cv.md or article-digest.md. Do not pad a role with generic responsibilities:
+if the sources support fewer distinct, relevant facts, use fewer bullets.`;
 
 // ---------------------------------------------------------------------------
 // Prompt caching (#1709, closing the gap in #2432) — same shape as

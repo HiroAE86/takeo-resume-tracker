@@ -49,6 +49,39 @@ const trackerPath = resolveTrackerPath(getCareerOpsRoot());
 const workspaceRoot = resolveWorkspaceRoot(trackerPath);
 const PDF_PAGE_MARGIN = '0.6in';
 
+// HTML created before the FAANGPath/Jake standard embeds the old colorful
+// template's CSS directly. `generate-pdf` used to render that frozen styling
+// unchanged, even after the canonical template changed. Keep the conversion
+// deliberately narrow: only an HTML document carrying the legacy template's
+// CSS token plus its structural markers is restyled; arbitrary user HTML is
+// still rendered exactly as supplied.
+let canonicalResumeStylePromise = null;
+function isLegacyCareerOpsCv(html) {
+  return typeof html === 'string'
+    && html.includes('--secondary-color: hsl(270, 70%, 45%)')
+    && html.includes('<div class="header-gradient">')
+    && html.includes('<!-- HEADER -->')
+    && html.includes('<!-- PROFESSIONAL SUMMARY -->')
+    && html.includes('<!-- WORK EXPERIENCE -->');
+}
+
+export async function canonicalizeLegacyCareerOpsCv(html, format = 'a4') {
+  if (!isLegacyCareerOpsCv(html)) return html;
+
+  canonicalResumeStylePromise ??= readFile(
+    resolve(__dirname, 'templates', 'cv-template.jake.html'),
+    'utf-8',
+  ).then((template) => {
+    const style = template.match(/<style\b[^>]*>[\s\S]*?<\/style>/i)?.[0];
+    if (!style) throw new Error('Canonical resume template is missing its style block');
+    return style;
+  });
+
+  const pageWidth = String(format).toLowerCase() === 'letter' ? '8.5in' : '210mm';
+  const style = (await canonicalResumeStylePromise).replace('{{PAGE_WIDTH}}', pageWidth);
+  return html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/i, () => style);
+}
+
 // Canonical tracker workspace: realpath so a symlinked ancestor (e.g. macOS
 // /var -> /private/var) is compared like-for-like by assertInsideWorkspace.
 // When CAREER_OPS_TRACKER points at another workspace, that workspace—not the
@@ -1310,6 +1343,7 @@ async function generatePDF() {
   console.log(`📐 Page budget: ${maxPages}${strictPages ? ' (strict)' : ' (warning only)'}`);
 
   let html = await readFile(inputPath, 'utf-8');
+  html = await canonicalizeLegacyCareerOpsCv(html, format);
   let cvMarkdown = '';
   try {
     cvMarkdown = await readFile(resolve(workspaceRoot, 'cv.md'), 'utf-8');
@@ -1485,6 +1519,7 @@ async function runBatchFromManifest(manifestPath, globals) {
       }
 
       let html = await readFile(entryInput, 'utf-8');
+      html = await canonicalizeLegacyCareerOpsCv(html, entryFormat);
       // Same order as the single render: reorder first so the guard judges the
       // document that will actually be printed. Without this the batch path
       // rendered N CVs with cv.sections silently inert.

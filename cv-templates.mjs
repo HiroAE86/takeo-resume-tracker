@@ -28,6 +28,11 @@ export const KINDS = {
   },
 };
 
+// The monochrome, single-column FAANGPath/Jake layout is the canonical HTML
+// resume experience. Keep `standard` as a compatibility fallback for template
+// packs that only supply the historical base file.
+const CANONICAL_HTML_TEMPLATE = { cv: 'jake', cover: 'standard' };
+
 export function prettify(name) {
   return name
     .split('-')
@@ -244,7 +249,6 @@ export function resolveTemplate(kind, name, opts = {}) {
   assertFormat(format);
 
   const explicit = Boolean(name && String(name).trim());
-  let chosen = kebab(explicit ? name : loadProfileDefault(kind, { profilePath }) || 'standard');
   const fileFor = (n) => (n === 'standard' ? `${cfg.prefix}.${format}` : `${cfg.prefix}.${n}.${format}`);
 
   // Resolution goes through the same discovery as listTemplates, so a name that
@@ -254,9 +258,17 @@ export function resolveTemplate(kind, name, opts = {}) {
   // Every by-name caller lands here — build-cv-latex.mjs, generate-cover-letter.mjs.
   const found = discover(kind, { dir, format });
 
+  // Prefer the canonical built-in HTML template where it is available. Custom
+  // template directories and LaTeX retain the historical base fallback so a
+  // pack is never made invalid merely by this default change.
+  const fallbackName = CANONICAL_HTML_TEMPLATE[kind] && format === 'html' && found.has(CANONICAL_HTML_TEMPLATE[kind])
+    ? CANONICAL_HTML_TEMPLATE[kind]
+    : 'standard';
+  let chosen = kebab(explicit ? name : loadProfileDefault(kind, { profilePath }) || fallbackName);
+
   let entry = found.get(chosen);
-  if (!entry && fallback && chosen !== 'standard') {
-    chosen = 'standard';
+  if (!entry && fallback && chosen !== fallbackName) {
+    chosen = fallbackName;
     entry = found.get(chosen);
   }
   if (!entry) {

@@ -144,6 +144,12 @@ test('resolveTemplate: base standard when nothing set (backward-compatible)', ()
   assert.ok(p.endsWith('cv-template.html'));
 });
 
+test('resolveTemplate: canonical repository default is Jake when no profile selects a template', () => {
+  const missingProfile = join(fixtureDir(), 'missing-profile.yml');
+  const p = resolveTemplate('cv', undefined, { profilePath: missingProfile });
+  assert.ok(p.endsWith('cv-template.jake.html'));
+});
+
 test('resolveTemplate: missing named template throws (fail loud)', () => {
   const { dir, profile } = fixtureWithProfile(null);
   assert.throws(() => resolveTemplate('cv', 'nope', { dir, profilePath: profile }), /not found/);

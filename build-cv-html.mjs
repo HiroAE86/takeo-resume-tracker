@@ -4,7 +4,7 @@
 //
 // The agent reads cv.md + config/profile.yml, tailors the content, and writes a
 // compact JSON payload. This script merges that payload into the resolved CV
-// template (default templates/cv-template.html; pass a path resolved by
+// template (default templates/cv-template.jake.html; pass a path resolved by
 // cv-templates.mjs to honor config-selectable templates, #1691) — it owns every
 // tag, class, and the HTML escaping,
 // so the model never has to emit the full document. That moves the PDF step's
@@ -36,7 +36,7 @@ import { hasRequiredFields, validatePayload } from './lib/cv-payload-schema.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_ROOT = getCareerOpsRoot();
-const TEMPLATE_PATH = resolve(__dirname, 'templates', 'cv-template.html');
+const TEMPLATE_PATH = resolve(__dirname, 'templates', 'cv-template.jake.html');
 const PLACEHOLDER_RE = /\{\{[A-Z_]+\}\}/g;
 const CONTACT_ROW_RE = /<div class="contact-row">[\s\S]*?<\/div>/;
 
@@ -736,7 +736,7 @@ async function main() {
     console.error('  node build-cv-html.mjs --preview <input.json> [template.html]');
     console.error('  node build-cv-html.mjs --test');
     console.error('');
-    console.error('  [template.html] defaults to templates/cv-template.html. Pass the path');
+    console.error('  [template.html] defaults to templates/cv-template.jake.html. Pass the path');
     console.error('  printed by `node cv-templates.mjs resolve cv` to use a selected template.');
     console.error('');
     console.error('  Section partials (#2183):');

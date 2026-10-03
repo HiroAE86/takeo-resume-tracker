@@ -11,7 +11,7 @@ When a CV is reused or lightly tailored for an existing application, initialize 
 
 Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previous.md` when both comparison sources exist. Record the visible decision (`reuse`, `reuse-with-edits`, or `regenerate`), score, source CV/JD paths, and changed sections in `decision/reuse.json`. Strongly discourage applications scoring below 4.0/5 and proceed only when the user explicitly overrides that recommendation. Reuse only after a visible `reuse` result or an explicit user override; never silently reuse when a source is missing. The PDF manifest supports these nested paths and continues to link them to the report. Flat `output/` paths remain valid for one-off PDFs.
 
-1. Read `cv.md` as the source of truth
+1. Read `cv.md` and `article-digest.md` (if present) as the primary sources of truth for candidate facts
 2. Ask the user for the JD if it is not in context (text or URL)
 3. Extract 15-20 keywords from the JD
 4. Run the zero-LLM skill-gap check before drafting anything: **always** write the JD to `jds/{slug}.md` first — required, not conditional, even when a report for this application already exists — then `node jd-skill-gap.mjs jds/{slug}.md --summary`. This classifies the JD's explicit requirements against `cv.md` into three buckets — never surface `result.gap` items as if the candidate has them:
@@ -35,7 +35,7 @@ Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previ
 9. Build an internal recruiter-side risk map from the JD using `modes/heuristics/recruiter-side.md`: likely doubts, matching evidence, and which document section should address each doubt
 10. Rewrite Professional Summary by injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
 11. Select top 3-4 most relevant projects for the job. If `cv.md` carries an Awards / Honors section, populate `awards[]` with the entries that support this role — for an early-career candidate a contest medal or dean's list often outranks a thin project. Omit the key when there is nothing to list and the section disappears entirely; never invent an award to fill it
-12. Reorder experience bullets by JD relevance and by the risk map: strongest matching evidence first
+12. Apply the **Experience-evidence standard** to every selected role: create 3–5 concise bullets only where the primary sources support them. Before drafting each bullet, map a **source fact** from `cv.md` or `article-digest.md` to a **JD requirement** or recruiter risk. Reframe, split, or combine supported facts to make the action, system, collaborators, scope, and outcome clear; reorder the finished bullets by JD relevance and risk-map priority. Do not pad a role with generic responsibilities — if the sources support fewer distinct, relevant facts, use fewer bullets. Never add a metric, ownership claim, tool, or business impact that the source does not establish.
 13. Build competency grid from JD requirements (6-8 keyword phrases), prioritizing `existing` and `supportedByResume` skills from Step 4 — never a `gap` skill
 14. Inject keywords naturally into existing achievements (NEVER invent)
 15. Apply the six-second clarity gate from `modes/heuristics/recruiter-side.md`: top third must make target role, strongest fit, and proof obvious
@@ -81,18 +81,17 @@ Run `npm run jd:similarity -- {bundle-root}/jd/current.md {bundle-root}/jd/previ
 
 ## PDF Design
 
-- **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- **Fonts self-hosted**: `fonts/`
-- **Header**: name in Space Grotesk 24px bold + gradient line `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + contact row
-- **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, color cyan primary
-- **Body**: DM Sans 11px, line-height 1.5
-- **Company names**: accent purple color `hsl(270,70%,45%)`
-- **Margins**: 0.6in
+- **Canonical template**: `templates/cv-template.jake.html` (FAANGPath/Jake style)
+- **Fonts**: Liberation Serif / Times-class serif, 10.5px body
+- **Header**: centered name and plain, underlined contact line; no color or gradient
+- **Section headers**: uppercase serif labels with a thin full-width black rule
+- **Experience**: company and dates on the first row; italic role and location on the second
+- **Margins**: 0.5in
 - **Background**: pure white
 
 ## Section order (optimized "6-second recruiter scan")
 
-1. Header (large name, gradient, contact, portfolio link)
+1. Header (centered name, contact, portfolio link)
 2. Professional Summary (3-4 lines, keyword-dense)
 3. Core Competencies (6-8 keyword phrases in flex-grid)
 4. Work Experience (reverse chronological)
@@ -120,7 +119,7 @@ Resolve which template to fill with the shared resolver (do not hardcode `cv-tem
 - If the user named a template this turn (e.g. "use the *modern* template"), run:
   `node cv-templates.mjs resolve cv "<name>"`
 - Otherwise run: `node cv-templates.mjs resolve cv`
-  (this returns the `cv.template` default from `config/profile.yml`, or the base `cv-template.html` when unset).
+  (this returns the `cv.template` default from `config/profile.yml`, or the canonical `cv-template.jake.html` when unset).
 
 The command prints the absolute path of the template to fill; a non-zero exit means the named template is missing or invalid — surface that message to the user instead of silently falling back.
 
@@ -130,7 +129,7 @@ To show the user their options (e.g. "what CV templates do I have?"), run `node 
 
 ### JSON Input Schema
 
-Write a JSON file with this structure, then run `node build-cv-html.mjs <input.json> <output.html> [template.html]` (the optional third argument is the template path from **Selecting the template**; omit it for the base `cv-template.html`).
+Write a JSON file with this structure, then run `node build-cv-html.mjs <input.json> <output.html> [template.html]` (the optional third argument is the template path from **Selecting the template**; omit it for the canonical `cv-template.jake.html`).
 
 ```json
 {
