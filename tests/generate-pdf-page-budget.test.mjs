@@ -255,8 +255,7 @@ try {
   const strictOverflow = runPdf([input, strictOverflowPdf, '--max-pages=1', '--strict-pages']);
   if (
     strictOverflow.status !== 0 &&
-    existsSync(strictOverflowPdf) &&
-    countPages(strictOverflowPdf) === 2 &&
+    !existsSync(strictOverflowPdf) &&
     strictOverflow.output.includes('📐 Page budget: 1 (strict)') &&
     strictOverflow.output.includes('CV is 2 pages') &&
     strictOverflow.output.includes('allowed maximum is 1 page') &&
@@ -266,7 +265,7 @@ try {
     !strictOverflow.output.includes('Manifest:') &&
     readFileSync(manifest, 'utf-8') === manifestBeforeStrictOverflow
   ) {
-    pass('generate-pdf rejects overflow only with --strict-pages');
+    pass('generate-pdf rejects strict overflow before writing a PDF');
   } else {
     fail(`generate-pdf strict page budget regressed: ${strictOverflow.output.trim()}`);
   }

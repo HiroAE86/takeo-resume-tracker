@@ -221,6 +221,8 @@ const SYSTEM_PATHS = [
   'build-dashboard.mjs',
   'clean-markers.mjs',
   'generate-pdf.mjs',
+  'check-pdf-pages.mjs',
+  'pdf-page-count.mjs',
   'hired-share.mjs',
   'hired-wall-build.mjs',
   'HIRED.md',

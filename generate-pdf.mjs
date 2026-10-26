@@ -40,6 +40,7 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFile
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'node:crypto';
 import { getCareerOpsRoot } from './path-resolver.mjs';
+import { countPdfPages } from './pdf-page-count.mjs';
 import { readStyleTokens, injectThemeStyle, readCvSectionOrder } from './theme-style.mjs';
 import { resolvePdfIndexPath, resolveTrackerPath, resolveWorkspaceRoot } from './tracker-utils.mjs';
 import { isMainModule } from './lib/is-main-module.mjs';
@@ -1081,28 +1082,11 @@ export function enforcePageBudget(pageCount, { maxPages = 2, strictPages = false
  * @returns {number}
  */
 function countRenderedPdfPages(pdfBuffer) {
-  const pdf = pdfBuffer.toString('latin1');
-  const objects = new Map();
-  const objectPattern = /(?:^|[\r\n])(\d+)\s+(\d+)\s+obj\b([\s\S]*?)\bendobj\b/g;
-
-  for (const match of pdf.matchAll(objectPattern)) {
-    const streamIndex = match[3].search(/\bstream(?:\r?\n|\r)/);
-    const dictionary = streamIndex === -1 ? match[3] : match[3].slice(0, streamIndex);
-    objects.set(`${match[1]} ${match[2]}`, dictionary);
+  try {
+    return countPdfPages(pdfBuffer);
+  } catch (error) {
+    throw new Error('Could not determine the rendered PDF page count from its page tree.', { cause: error });
   }
-
-  const catalog = [...objects.values()].find((body) => /\/Type\s*\/Catalog\b/.test(body));
-  const pagesRef = catalog?.match(/\/Pages\s+(\d+)\s+(\d+)\s+R\b/);
-  const pages = pagesRef ? objects.get(`${pagesRef[1]} ${pagesRef[2]}`) : null;
-  const count = pages && /\/Type\s*\/Pages\b/.test(pages)
-    ? pages.match(/\/Count\s+(\d+)\b/)
-    : null;
-  const pageCount = count ? Number(count[1]) : 0;
-
-  if (!Number.isInteger(pageCount) || pageCount < 1) {
-    throw new Error('Could not determine the rendered PDF page count from its page tree.');
-  }
-  return pageCount;
 }
 
 /**
@@ -1798,19 +1782,18 @@ async function renderInPage(browser, html, outputPath, opts = {}) {
       preferCSSPageSize: true,
     });
 
-    // Write PDF only after rendering has completed. Renderer cleanup still runs
-    // if an injected browser fails before producing a buffer.
-    await writeFile(outputPath, pdfBuffer);
-
     // Read the root page-tree count so page-like text in streams is ignored.
     const pageCount = countRenderedPdfPages(pdfBuffer);
 
-    // Strict overflow leaves the draft on disk but stops before success logs
-    // and manifest publication. Default overflow warns and continues.
+    // Enforce the page budget before writing. In strict mode an oversized PDF
+    // must not appear at the requested output path or enter the manifest.
     enforcePageBudget(pageCount, {
       maxPages: opts.maxPages ?? 2,
       strictPages: opts.strictPages ?? false,
     });
+
+    // Only publish bytes after the rendered page count passes the strict gate.
+    await writeFile(outputPath, pdfBuffer);
 
     console.log(`✅ PDF generated: ${outputPath}`);
     console.log(`📊 Pages: ${pageCount}`);

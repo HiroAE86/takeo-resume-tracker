@@ -8,7 +8,7 @@ description: >-
 arguments: mode
 user_invocable: true
 user-invocable: true
-argument-hint: "[scan | discover | deep | pdf | text | latex | latex-tex | cover | email | add | expand | eu-swe | oferta | ofertas | apply | batch | tracker | agent-inbox | pipeline | contacto | training | project | interview-prep | interview | interview/plan | interview/practice | interview/debrief | interview-redflag | patterns | offer-prep | titles | upskill | followup | reply-watch | outcome | update]"
+argument-hint: "[scan | discover | deep | pdf | pdf-check | text | latex | latex-tex | cover | email | add | expand | eu-swe | oferta | ofertas | apply | batch | tracker | agent-inbox | pipeline | contacto | training | project | interview-prep | interview | interview/plan | interview/practice | interview/debrief | interview-redflag | patterns | offer-prep | titles | upskill | followup | reply-watch | outcome | update]"
 license: MIT
 ---
 
@@ -35,6 +35,7 @@ Evaluate this JD with career-ops auto-pipeline: https://company.com/jobs/123
 Run the career-ops scan mode and summarize new matches.
 Run the career-ops pipeline mode for data/pipeline.md.
 Run the career-ops pdf mode for the latest evaluated role.
+Check whether a PDF has more than one page with career-ops pdf-check.
 Run the career-ops tracker mode and summarize the current statuses.
 ```
 
@@ -58,6 +59,7 @@ Determine the mode from `$mode`:
 | `interview/practice` | `interview/practice` |
 | `interview/debrief` | `interview/debrief` |
 | `pdf` | `pdf` |
+| `pdf-check` | Check an existing PDF's page count |
 | `text` | `text` |
 | `latex` | `latex` |
 | `latex-tex` | `latex-tex` |
@@ -117,6 +119,7 @@ Concrete equivalents for Codex prompt-driven sessions:
 /career-ops scan           ↔ "Run the career-ops scan mode and summarize new matches."
 /career-ops pipeline       ↔ "Run the career-ops pipeline mode for data/pipeline.md."
 /career-ops pdf            ↔ "Run the career-ops pdf mode for the latest evaluated role."
+/career-ops pdf-check       ↔ "Check whether output/my-cv.pdf has more than one page."
 /career-ops email          ↔ "Run the career-ops email mode for the latest evaluated role."
 /career-ops tracker        ↔ "Run the career-ops tracker mode and summarize the current statuses."
 ```
@@ -141,6 +144,7 @@ Available commands:
   /career-ops interview/practice → Practice interview, one question at a time with feedback
   /career-ops interview/debrief → Post-interview debrief: close gaps, predict next round
   /career-ops pdf       → PDF only, ATS-optimized CV
+  /career-ops pdf-check → Check whether a PDF exceeds one page (provide its path)
   /career-ops text      → Tailored markdown CV (mirrors cv.md, no PDF)
   /career-ops latex     → Export CV as LaTeX/Overleaf .tex
   /career-ops latex-tex → Tailor your own resume.tex in place (opt-in; cv.md stays default)
@@ -187,6 +191,12 @@ Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `text`, `contacto`, `ap
 Read `modes/_profile.md` (if exists) + `modes/_custom.md` (if exists) + `modes/{mode}.md`
 
 Applies to: `tracker`, `agent-inbox`, `deep`, `interview-prep`, `interview`, `regional/eu-swe`, `interview/plan`, `interview/practice`, `interview/debrief`, `latex`, `latex-tex`, `training`, `project`, `patterns`, `titles`, `upskill`, `followup`, `reply-watch`, `outcome`, `cover`, `email`, `add`, `offer-prep`, `discover`
+
+### Standalone utility commands
+
+- `pdf-check {path}` → run `node check-pdf-pages.mjs {path}` from `PROJECT_ROOT`. It reports the page count and whether the PDF exceeds one page.
+- When `pdf-check` is invoked, use the provided PDF path and do not regenerate the CV. Exit code `1` means the page count exceeds the limit; exit code `2` means the file could not be checked.
+- The checker reads the visible PDF page tree used by Chromium-rendered career-ops PDFs; report an unknown count if the file uses an unsupported PDF structure.
 
 ### Modes delegated to subagent
 
